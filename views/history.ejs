@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>History — AttendTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% const page = 'history'; %>
+  <%- include('nav') %>
+
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Attendance History</h1>
+        <p class="page-sub">Review a student's attendance record</p>
+      </div>
+    </div>
+
+    <% if (error) { %><div class="alert alert-error">⚠ <%= error %></div><% } %>
+
+    <div class="history-select-wrap">
+      <form method="GET" action="/attendance/history" class="history-select-form">
+        <div class="field field-row">
+          <label for="student_id">Select Student</label>
+          <select name="student_id" id="student_id" onchange="this.form.submit()">
+            <option value="">— Choose a student —</option>
+            <% students.forEach(s => { %>
+              <option value="<%= s.id %>" <%= selectedId == s.id ? 'selected' : '' %>><%= s.name %><% if (s.class) { %> (<%= s.class %>)<% } %></option>
+            <% }) %>
+          </select>
+        </div>
+      </form>
+    </div>
+
+    <% if (selectedStudent && history.length > 0) {
+      const present = history.filter(h => h.status === 'present').length;
+      const absent = history.filter(h => h.status === 'absent').length;
+      const rate = Math.round((present / history.length) * 100);
+    %>
+      <div class="history-header">
+        <div class="history-avatar"><%= selectedStudent.name.charAt(0).toUpperCase() %></div>
+        <div class="history-meta">
+          <h2><%= selectedStudent.name %></h2>
+          <p><%= selectedStudent.class || '' %><% if (selectedStudent.student_id) { %> · ID: <%= selectedStudent.student_id %><% } %></p>
+        </div>
+        <div class="history-stats">
+          <div class="stat-box stat-present">
+            <div class="stat-num"><%= present %></div>
+            <div class="stat-lbl">Present</div>
+          </div>
+          <div class="stat-box stat-absent">
+            <div class="stat-num"><%= absent %></div>
+            <div class="stat-lbl">Absent</div>
+          </div>
+          <div class="stat-box stat-rate">
+            <div class="stat-num"><%= rate %>%</div>
+            <div class="stat-lbl">Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini calendar strip -->
+      <div class="history-calendar">
+        <% history.slice(0, 30).forEach(h => { %>
+          <div class="cal-dot cal-<%= h.status %>" title="<%= h.date %>: <%= h.status %>">
+            <span class="cal-date"><%= new Date(h.date).getDate() %></span>
+            <span class="cal-month"><%= new Date(h.date).toLocaleString('en', {month:'short'}) %></span>
+          </div>
+        <% }) %>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Day</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% history.forEach(h => {
+              const d = new Date(h.date);
+              const day = d.toLocaleString('en', {weekday: 'long'});
+              const formatted = d.toLocaleDateString('en', {year:'numeric', month:'long', day:'numeric'});
+            %>
+            <tr>
+              <td><%= formatted %></td>
+              <td class="muted"><%= day %></td>
+              <td>
+                <% if (h.status === 'present') { %>
+                  <span class="badge badge-present">✓ Present</span>
+                <% } else { %>
+                  <span class="badge badge-absent">✗ Absent</span>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+    <% } else if (selectedStudent && history.length === 0) { %>
+      <div class="empty-state">
+        <p>No attendance records yet for <strong><%= selectedStudent.name %></strong>.</p>
+        <a href="/attendance/take" class="btn btn-primary" style="margin-top:1rem">Take Attendance →</a>
+      </div>
+    <% } else if (!selectedId) { %>
+      <div class="empty-state">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        <p>Select a student above to view their history.</p>
+      </div>
+    <% } %>
+  </main>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

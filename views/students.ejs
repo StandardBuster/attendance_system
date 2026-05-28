@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Students — AttendTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% const page = 'students'; %>
+  <%- include('nav') %>
+
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Students</h1>
+        <p class="page-sub">Manage your class roster</p>
+      </div>
+      <button class="btn btn-primary" onclick="toggleModal('addModal')">+ Add Student</button>
+    </div>
+
+    <% if (message) { %><div class="alert alert-success"><%= message %></div><% } %>
+    <% if (error) { %><div class="alert alert-error">⚠ <%= error %></div><% } %>
+
+    <% if (students.length === 0) { %>
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <p>No students yet. Add your first student above.</p>
+      </div>
+    <% } else { %>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Student ID</th>
+              <th>Class</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Rate</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% students.forEach(s => {
+              const st = stats[s.id] || { present: 0, absent: 0 };
+              const total = st.present + st.absent;
+              const rate = total > 0 ? Math.round((st.present / total) * 100) : null;
+            %>
+            <tr>
+              <td><strong><%= s.name %></strong></td>
+              <td><span class="badge badge-id"><%= s.student_id || '—' %></span></td>
+              <td><%= s.class || '—' %></td>
+              <td><span class="badge badge-present"><%= st.present %></span></td>
+              <td><span class="badge badge-absent"><%= st.absent %></span></td>
+              <td>
+                <% if (rate !== null) { %>
+                  <div class="rate-bar">
+                    <div class="rate-fill" style="width:<%= rate %>%"></div>
+                    <span><%= rate %>%</span>
+                  </div>
+                <% } else { %>—<% } %>
+              </td>
+              <td class="actions">
+                <a href="/attendance/history?student_id=<%= s.id %>" class="btn-icon" title="View history">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                </a>
+                <form method="POST" action="/students/delete/<%= s.id %>" onsubmit="return confirm('Remove <%= s.name %>?')">
+                  <button type="submit" class="btn-icon btn-icon-danger" title="Remove">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </main>
+
+  <!-- Add Student Modal -->
+  <div class="modal-overlay" id="addModal" onclick="closeModalOutside(event,'addModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Add New Student</h2>
+        <button class="modal-close" onclick="toggleModal('addModal')">✕</button>
+      </div>
+      <form method="POST" action="/students/add" class="modal-form">
+        <div class="field">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" name="name" placeholder="e.g. Anna Lindqvist" required/>
+        </div>
+        <div class="field">
+          <label>Student ID</label>
+          <input type="text" name="student_id" placeholder="e.g. S-2024-001"/>
+        </div>
+        <div class="field">
+          <label>Class</label>
+          <input type="text" name="class" placeholder="e.g. 9A"/>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="toggleModal('addModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

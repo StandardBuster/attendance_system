@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Take Attendance — AttendTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% const page = 'take'; %>
+  <%- include('nav') %>
+
+  <main class="container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Take Attendance</h1>
+        <p class="page-sub">Mark students present or absent</p>
+      </div>
+      <div class="date-picker-wrap">
+        <label for="datePicker">Date</label>
+        <input type="date" id="datePicker" value="<%= date %>" onchange="changeDate(this.value)"/>
+      </div>
+    </div>
+
+    <% if (error) { %><div class="alert alert-error">⚠ <%= error %></div><% } %>
+
+    <% if (students.length === 0) { %>
+      <div class="empty-state">
+        <p>No students found. <a href="/students">Add students first →</a></p>
+      </div>
+    <% } else { %>
+      <div class="attend-toolbar">
+        <span class="attend-count" id="countDisplay"></span>
+        <div class="attend-bulk">
+          <button type="button" class="btn btn-sm btn-outline-present" onclick="markAll('present')">✓ All Present</button>
+          <button type="button" class="btn btn-sm btn-outline-absent" onclick="markAll('absent')">✗ All Absent</button>
+        </div>
+      </div>
+
+      <form method="POST" action="/attendance/take" id="attendForm">
+        <input type="hidden" name="date" value="<%= date %>"/>
+        <div class="attend-grid">
+          <% students.forEach(s => {
+            const status = existingMap[s.id] || 'present';
+          %>
+          <div class="attend-card" id="card-<%= s.id %>" data-status="<%= status %>">
+            <div class="attend-info">
+              <div class="attend-avatar"><%= s.name.charAt(0).toUpperCase() %></div>
+              <div>
+                <div class="attend-name"><%= s.name %></div>
+                <div class="attend-meta"><%= s.class || '' %><% if (s.student_id) { %> · <%= s.student_id %><% } %></div>
+              </div>
+            </div>
+            <div class="attend-toggle">
+              <input type="hidden" name="status_<%= s.id %>" id="inp-<%= s.id %>" value="<%= status %>"/>
+              <button type="button"
+                class="toggle-btn toggle-present <%= status === 'present' ? 'active' : '' %>"
+                onclick="setStatus('<%= s.id %>', 'present')">
+                ✓ Present
+              </button>
+              <button type="button"
+                class="toggle-btn toggle-absent <%= status === 'absent' ? 'active' : '' %>"
+                onclick="setStatus('<%= s.id %>', 'absent')">
+                ✗ Absent
+              </button>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+
+        <div class="submit-bar">
+          <div class="submit-summary" id="summary"></div>
+          <button type="submit" class="btn btn-primary btn-lg">Save Attendance →</button>
+        </div>
+      </form>
+    <% } %>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    function setStatus(id, status) {
+      document.getElementById('inp-' + id).value = status;
+      const card = document.getElementById('card-' + id);
+      card.dataset.status = status;
+      card.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      card.querySelector('.toggle-' + status).classList.add('active');
+      updateCount();
+    }
+
+    function markAll(status) {
+      document.querySelectorAll('[id^="card-"]').forEach(card => {
+        const id = card.id.replace('card-', '');
+        setStatus(id, status);
+      });
+    }
+
+    function updateCount() {
+      const cards = document.querySelectorAll('[id^="card-"]');
+      let present = 0, absent = 0;
+      cards.forEach(c => { c.dataset.status === 'present' ? present++ : absent++; });
+      const el = document.getElementById('countDisplay');
+      if (el) el.textContent = `${cards.length} students`;
+      const sum = document.getElementById('summary');
+      if (sum) sum.innerHTML = `<span class="pill-present">${present} present</span> <span class="pill-absent">${absent} absent</span>`;
+    }
+
+    function changeDate(val) {
+      window.location.href = '/attendance/take?date=' + val;
+    }
+
+    updateCount();
+  </script>
+</body>
+</html>

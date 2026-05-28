@@ -1,0 +1,27 @@
+<nav class="nav">
+  <a href="/students" class="nav-brand">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <rect width="24" height="24" rx="7" fill="var(--accent)"/>
+      <path d="M7 17c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="12" cy="9" r="2.5" stroke="white" stroke-width="1.5"/>
+    </svg>
+    <span>AttendTrack</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/students" class="<%= page === 'students' ? 'active' : '' %>">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Students
+    </a></li>
+    <li><a href="/attendance/take" class="<%= page === 'take' ? 'active' : '' %>">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Take Attendance
+    </a></li>
+    <li><a href="/attendance/history" class="<%= page === 'history' ? 'active' : '' %>">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+      History
+    </a></li>
+  </ul>
+  <form method="POST" action="/logout" class="nav-logout">
+    <button type="submit" class="btn-ghost">Sign out</button>
+  </form>
+</nav>
