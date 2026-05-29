@@ -2,7 +2,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...ar
 
 const SUPABASE_URL = 'https://xixocgozopjylhxjhkfi.supabase.co/rest/v1';
 // Replace with your actual anon key from Supabase dashboard → Settings → API
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpeG9jZ296b3BqeWxoeGpoa2ZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2OTk5MDcsImV4cCI6MjA4ODI3NTkwN30.AGVmNvMzP6yqx7Hg3uSfJHsA1tMXasL6dz_PQ-LbX0w';
 
 function headers(extra = {}) {
   return {
@@ -53,11 +53,25 @@ async function getStudentHistory(studentId) {
 }
 
 async function upsertAttendance(records) {
-  return query('/attendance', {
-    method: 'POST',
-    headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify(records)
-  });
+  const fetch2 = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+  const promises = records.map(record =>
+    fetch2(`${SUPABASE_URL}/attendance?student_id=eq.${record.student_id}&date=eq.${record.date}`, {
+      method: 'PATCH',
+      headers: headers(),
+      body: JSON.stringify({ status: record.status })
+    }).then(async res => {
+      const text = await res.text();
+      // If no row existed yet, insert it
+      if (text === '[]' || text === '') {
+        return fetch2(`${SUPABASE_URL}/attendance`, {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify(record)
+        });
+      }
+    })
+  );l
+  return Promise.all(promises);
 }
 
 async function getAttendanceSummary() {
